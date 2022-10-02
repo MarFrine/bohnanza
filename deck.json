@@ -1,0 +1,86 @@
+[   
+    {
+        "id": 1,
+        "name": "Ackerbohne",
+        "image": "ackerbohne.png",
+        "count": 3,
+        "gains": [2, 3]
+    },
+    {
+        "id": 2,
+        "name": "Kakaobohne",
+        "image": "kakaobohne.png",
+        "count": 4,
+        "gains": [2, 3, 4]
+    },
+    {
+        "id": 3,
+        "name": "Gartenbohne",
+        "image": "gartenbohne.png",
+        "count": 6,
+        "gains": [2, 3]
+    },
+    {
+        "id": 4,
+        "name": "Rote Bohne",
+        "image": "rotebohne.png",
+        "count": 8,
+        "gains": [2, 3, 4, 5]
+    },
+    {
+        "id": 5,
+        "name": "Augenbohne",
+        "image": "augenbohne.png",
+        "count": 10,
+        "gains": [2, 4, 5, 6]
+    },
+    {
+        "id": 6,
+        "name": "Sojabohne",
+        "image": "sojabohne.png",
+        "count": 12,
+        "gains": [2, 4, 6, 7]
+    },
+    {
+        "id": 7,
+        "name": "Brechbohne",
+        "image": "brechbohne.png",
+        "count": 14,
+        "gains": [3, 5, 6, 7]
+    },
+    {
+        "id": 8,
+        "name": "Saubohne",
+        "image": "saubohne.png",
+        "count": 16,
+        "gains": [3, 5, 7, 8]
+    },
+    {
+        "id": 9,
+        "name": "Feuerbohne",
+        "image": "feuerbohne.png",
+        "count": 18,
+        "gains": [3, 6, 8, 9]
+    },
+    {
+        "id": 10,
+        "name": "Blaue Bohne",
+        "image": "blauebohne.png",
+        "count": 20,
+        "gains": [4, 6, 8, 10]
+    },
+    {
+        "id": 11,
+        "name": "Weinbrandbohne",
+        "image": "weinbrandbohne.png",
+        "count": 22,
+        "gains": [4, 7, 9, 11]
+    },
+    {
+        "id": 12,
+        "name": "Kaffeebohne",
+        "image": "kaffeebohne.png",
+        "count": 24,
+        "gains": [4, 7, 10, 12]
+    }
+]

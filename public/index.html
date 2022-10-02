@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bohnanza</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="./client.js" defer></script>
+    <link type="text/css" rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div id="fullscreenBlock">
+    </div>
+    <div id="game">
+        <div id="left">
+            <div class="head">
+                <h2>Own Acres</h2>
+                <h4> - 2 - </h4>
+            </div>
+            <div id="ownAcre1" class="firstAcre" onmouseover="cursorOnAcre(1, true)" onmouseleave="cursorOnAcre(1, false)" onclick="changeOwnAcres(1)">
+                <div id="ownAcreCenter1" class="acreCenter">
+                    <img src="./pics/acre1.png" class="card" id="acrePic1" style="width: 150px;left:-23px;">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:60px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:75px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:90px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:105px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:120px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:135px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:150px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:165px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:180px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:195px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:210px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:225px">
+                </div>
+            </div>
+            <div id="ownAcre2" class="secondAcre" onmouseover="cursorOnAcre(2, true)" onmouseleave="cursorOnAcre(2, false)" onclick="changeOwnAcres(2)">
+                <div id="ownAcreCenter2" class="acreCenter">
+                    <img src="./pics/acre2.png" class="card" id="acrePic2" style="width: 150px;left:-23px;">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:60px">
+                    <img src="./pics/ackerbohne.png" class="card" style="top:75px">
+                </div>
+            </div>
+            <div id="ownAcre3" class="thirdAcre" onmouseover="cursorOnAcre(3, true)" onmouseleave="cursorOnAcre(3, false)" onclick="changeOwnAcres(3)">
+                <div id="ownAcreCenter3" class="acreCenter">
+                    <img src="./pics/acre3.png" class="card" id="acrePic3" style="width: 150px;left:-23px;">
+                </div>
+            </div>
+        </div>
+        <div id="center">
+            <div class="head">
+                <h2>Bohnanza</h2>
+                <h4 id="myName"></h4>
+            </div>
+            <div id="centerTop">
+                <div id="centerCards">
+                    <div id="centerCardLeft" class="centerCard" style="left: 0px;">
+                        <img src="./pics/questionmark.png" class="card">
+                    </div>
+                    <div id="centerCardRight" class="centerCard" style="right: 0px;">
+                        <img src="./pics/questionmark.png" class="card">
+                    </div>
+                </div>
+                <button id="tradeRequest" class="centerButton" style="display:none;" onclick="requestTrade(this, turn)"><h2>request trade</h2></button>
+                <button id="endMove" class="centerButton" style="display:none;" onclick="endMove()"><h2>end current move</h2></button>
+                <button id="revealCards" class="centerButton" style="display:none;" onclick="revealCards()"><h2>reveal cards</h2></button>
+                <div id="showTradeRequests" style="display: none;"></div>
+            </div>
+            <div id="handcards">
+                <div class="head" style="height: 45px;">
+                    <h3>Handcards</h3>
+                </div>
+                <div id="handcardContainer">
+                    <img src="./pics/ackerbohne.png" class="handCard card highlightOnHover" style="left:120px">
+                    <img src="./pics/ackerbohne.png" class="handCard card highlightOnHover" style="left:80px">
+                    <img src="./pics/ackerbohne.png" class="handCard card highlightOnHover" style="left:40px">
+                    <img src="./pics/ackerbohne.png" class="handCard card highlightOnHover" style="left:0px">
+                    <img src="./pics/ackerbohne.png" class="handCard card highlightOnHover" style="left:-40px">
+                    <img src="./pics/ackerbohne.png" class="handCard card highlightOnHover" style="left:-80px">
+                    <img src="./pics/ackerbohne.png" class="handCard card selectedCard" style="left:-120px">
+                </div>
+            </div>
+        </div>
+        <div id="right">
+            <div id="foreignAcres" class="sub_right" style="background-image: url('./pics/soil.png');">
+                <div class="head">
+                    <button id="nextAcre">&#10148;</button>
+                    <h2>Acres</h2>
+                    <h4> - SchokoMine - </h4>
+                </div>
+                <div id="foreignAcre1" class="firstAcre">
+                    <div id="foreignAcreCenter1" class="acreCenter">
+                        <img src="./pics/acre1.png" class="card" style="width: 150px;left:-23px;">
+                        <img src="./pics/ackerbohne.png" class="card" style="top:60px">
+                        <img src="./pics/ackerbohne.png" class="card" style="top:75px">
+                    </div>
+                </div>
+                <div id="foreignAcre2" class="secondAcre" >
+                    <div id="foreignAcreCenter2" class="acreCenter">
+                        <img src="./pics/acre2.png" class="card" style="width: 150px;left:-23px;">
+                        <img src="./pics/ackerbohne.png" class="card" style="top:60px">
+                        <img src="./pics/ackerbohne.png" class="card" style="top:75px">
+                    </div>
+                </div>
+                <div id="foreignAcre3" class="thirdAcre">
+                    <div id="foreignAcreCenter3" class="acreCenter">
+                        <img src="./pics/acre3.png" class="card" style="width: 150px;left:-23px;">
+                        <img src="./pics/ackerbohne.png" class="card" style="top:60px">
+                    </div>
+                </div> 
+            </div>
+            <div id="trading" class="sub_right" style="display:none;">
+                <div class="head">
+                    <h2>Trading</h2>
+                    <h4 id="tradingPartner"></h4>
+                </div>
+                <div id="tradingButtons">
+                    <button id="tradingDecline" class="tradingButton" style="left: 3%;" onclick="tradingButton(false)"><h3>Decline</h3></button>
+                    <button id="tradingAccept" class="tradingButton" style="right: 3%;" onclick="tradingButton(true)"><h3>Accept</h3></button>
+                    <div id="line"></div>
+                </div>
+                <div id="ownTradingcards">
+                    <div id="ownTradingcardSlot" class="tradingcardSlot">
+                        <img src="./pics/ackerbohne.png" class="card highlightOnHover">
+                        <img src="./pics/ackerbohne.png" class="card highlightOnHover" style="top:20px">
+                        <img src="./pics/ackerbohne.png" class="card highlightOnHover" style="top:40px">
+                        <img src="./pics/ackerbohne.png" class="card highlightOnHover" style="top:60px">
+                    </div>
+                </div>
+                <div id="foreignTradingcards">
+                    <div id="foreignTradingcardSlot" class="tradingcardSlot">
+                        <img src="./pics/ackerbohne.png" class="card highlightOnHover">
+                        <img src="./pics/ackerbohne.png" class="card highlightOnHover" style="top:20px">
+                        <img src="./pics/ackerbohne.png" class="card highlightOnHover" style="top:40px">
+                    </div>
+                </div>
+            </div>
+            <div id="tradeDeclined" style="display: none;"><h2>trade declined</h2></div>
+        </div>
+    </div>
+</body>
+</html>
