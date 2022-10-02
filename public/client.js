@@ -12,6 +12,7 @@ let coins = 0
 let tradingCards = []
 let handCards = []
 let tradeHandCards = []
+let tradedCardsToPlant = []
 let selectedCard = {
     source: undefined,
     card: undefined,
@@ -216,9 +217,32 @@ socket.on("modifyTradingCards", (data)=>{
     }
 })
 
-socket.on("tradeFinished", ()=>{
+socket.on("tradeFinished", (data)=>{
     //succesful trade
     console.log("trade finished")
+    currentTrade = {
+        players: [{
+            id: undefined,
+            firstRequest: undefined,
+            accepted: false
+            },{
+            id: undefined,
+            firstRequest: undefined,
+            accepted: false
+        }]
+    }
+    document.getElementById("ownTradingcardSlot").innerHTML = " "
+    document.getElementById("foreignTradingcardSlot").innerHTML = " "
+    document.getElementById("tradingButtons").style.display = "none"
+    tradedCardsToPlant = []
+    let tradedCardsToPlantTemp = data.currentTrade.players[data.currentTrade.players.findIndex((thisPlayer)=>{return thisPlayer.id != myPlayerID})].cards
+    tradedCardsToPlantTemp.forEach((obj)=>{
+        tradedCardsToPlant.push(obj.card)
+    })
+    document.getElementById("tradedCards").style.display = "block"
+    renderTradedCardsToPlant()
+    console.log(tradedCardsToPlant)
+
 })
 
 socket.on("declineTrade", ()=>{
@@ -247,22 +271,22 @@ socket.on("declineTrade", ()=>{
 
 socket.on("tradeEnded", (data)=>{
     socket.emit("leaveRoom")
-    document.getElementById("foreignAcres").style.display = "block"
-    document.getElementById("trading").style.display = "none"
-    document.getElementById("ownTradingcardSlot").innerHTML = " "
-    document.getElementById("foreignTradingcardSlot").innerHTML = " "
-
     let handCardList = document.getElementsByClassName("handCard")
     for(let i = 0; i < handCardList.length; i++){
         handCardList[i].setAttribute("onclick", "")
         handCardList[i].classList.remove("pointer")
     }
-    if(openCardsLeft == 0 && turn == myPlayerID){
-        document.getElementById("endMove").style.display = "block"
-    }
 })
 
 socket.on("tradeCompleted", ()=>{
+    if(openCardsLeft == 0 && turn == myPlayerID){
+        document.getElementById("endMove").style.display = "block"
+    }
+    document.getElementById("foreignAcres").style.display = "block"
+    document.getElementById("tradingButtons").style.display = "block"
+    document.getElementById("trading").style.display = "none"
+    document.getElementById("ownTradingcardSlot").innerHTML = " "
+    document.getElementById("foreignTradingcardSlot").innerHTML = " "
     currentTrade = {
         players: [{
             id: undefined,
@@ -289,21 +313,6 @@ socket.on("disconnect", (reason)=>{
 
 
 
-/*async function transferData(url, type, bodyData){
-    if (type == "get") {
-        const response = await fetch(url, {method:type})
-        const data = await response.json()
-        return data
-    } else if (type == "post" || type == "put") {
-        const response = await fetch(url, {
-            method: type,
-            headers: {"Content-type": "application/json"},
-            body: JSON.stringify(bodyData)
-        })
-        const data = await response.json()
-        return data
-    }
-}*/
 
 function startGame(){
     socket.emit("startGame")
@@ -682,6 +691,19 @@ function removeTradingCard(all, cardNumber){
         }
         tradingCards.splice(cardNumber, 1)
         socket.emit("modifyTradingCards", {"cards":tradingCards, "player":myPlayerID})
+    }    
+}
+
+function renderTradedCardsToPlant(){
+    let initPosition = (100 / tradedCardsToPlant.length) / 2 - 50
+    let renderedCards = ""
+    tradedCardsToPlant.forEach((card, index)=>{
+        let cardPosition = initPosition + (100 / tradedCardsToPlant.length)*index
+        renderedCards += "<img src='./pics/" + cards.find((thisCard)=>{return thisCard.id == card}).image + "' id='tradedCardNumber" + (index+1) + "' class='card highlightOnHover tradedCard pointer' style='left:" + cardPosition + "%;top:-130px'></img>"
+    })
+    document.getElementById("tradedCards").innerHTML = renderedCards
+    tradedCardList = document.getElementsByClassName("tradedCard")
+    for(let i = 0; i < tradedCardList.length; i++){
+        tradedCardList[i].setAttribute("onclick", "selectCard(this.id, 'tradedCard', " + (i+1) + ")")
     }
-    
 }

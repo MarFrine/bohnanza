@@ -290,3 +290,10 @@ body{
     text-align: center;
     line-height: 450px;
 }
+#tradedCards{
+    position: absolute;
+    width: 40%;
+    left: 30%;
+    top: 50%;
+    background-color: rgba(0,0,100,0.3);
+}

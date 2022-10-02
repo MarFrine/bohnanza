@@ -208,7 +208,8 @@ io.on("connection", (socket)=>{
         io.to("trade").emit("editCurrentTrade", {"currentTrade": currentTrade})
         if(currentTrade.players[0].accepted == true && currentTrade.players[1].accepted == true){
             console.log("beide akzeptiert")
-            io.to("trade").emit("tradeFinished")
+            io.to("trade").emit("tradeFinished", {"currentTrade": currentTrade})
+            io.to("trade").emit("tradeEnded", {"reason": "finished"})
         }
     })
 
