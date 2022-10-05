@@ -452,6 +452,10 @@ function changeOwnAcres(acre, harvest){
                 openCardsLeft -= 1
                 socket.emit("centerCardRemove", {"card": "Right"})
                 if(openCardsLeft == 0){document.getElementById("endMove").style.display = "block"}
+            } else if(selectedCard.source == "tradedCard"){
+                let thisCardNumber = selectedCard.cardNumber
+                selectCard(selectedCard.id, "tradedCard")
+                removeTradedCard(thisCardNumber)
             }
         } else {
             changeOwnAcres(acre, true)
@@ -706,4 +710,17 @@ function renderTradedCardsToPlant(){
     for(let i = 0; i < tradedCardList.length; i++){
         tradedCardList[i].setAttribute("onclick", "selectCard(this.id, 'tradedCard', " + (i+1) + ")")
     }
+}
+
+function removeTradedCard(cardNumber){
+    tradedCardsToPlant.splice(cardNumber-1, 1)
+    renderTradedCardsToPlant()
+    if(tradedCardsToPlant.length < 1){
+        closeTradingMenu()
+    }
+}
+
+function closeTradingMenu(){
+    socket.emit("changeMyStatus", {"player": myPlayerID, "newOccupiedStatus": false})
+    document.getElementById("trading").style.display = "none"
 }

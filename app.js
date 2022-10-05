@@ -55,6 +55,7 @@ class Player {
         this.turn = false //wenn man am Zug ist
         this.handCards = []
         this.activeTrade = false
+        this.occupied = false // wenn der Spieler nach dem Zug noch Karten aunabuen muss
         players.push(this)
         activePlayers.push(this)
         playerCount++
@@ -161,29 +162,41 @@ io.on("connection", (socket)=>{
         io.to(data.forPlayer).emit("sendTradeRequest", {"fromPlayer": data.fromPlayer})
     })
 
-    socket.on("acceptTrade", (data)=>{
-        currentTrade = {
-            players: [{
-                id: data.fromPlayer,
-                cards: [],
-                accepted: false
-                },{
-                id: data.forPlayer,
-                cards: [],
-                accepted: false
-            }]
-        }
-        console.log("trade:", currentTrade)
+    socket.on("changeMyStatus", (data)=>{
+        activePlayers.find((thisActivePlayer)=>{
+            return thisActivePlayer.id == data.player
+        }).occupied = data.newOccupiedStatus
+        socket.emit("tradeCompleted")
+        console.log("status changed from " + data.player)
+    })
 
-        activePlayers.forEach((thisPlayer)=>{
-            if(thisPlayer.id == currentTrade.players[0].id ||thisPlayer.id == currentTrade.players[1].id){
-                console.log("spieler beteiligt")
-                io.to(thisPlayer.id).emit("startTrade", {"trade": currentTrade})
-            } else {
-                io.to(thisPlayer.id).emit("startTrade", {"trade": {players:[{id: data.fromPlayer},{id: data.forPlayer}]}})
+    socket.on("acceptTrade", (data)=>{
+        
+        if((activePlayers.find((thisActivePlayer)=>{return thisActivePlayer.id == data.fromPlayer}).occupied == true) || (activePlayers.find((thisActivePlayer)=>{return thisActivePlayer.id == data.forPlayer}).occupied == true)){
+            console.log("one player is occupied")
+        } else {
+            currentTrade = {
+                players: [{
+                    id: data.fromPlayer,
+                    cards: [],
+                    accepted: false
+                    },{
+                    id: data.forPlayer,
+                    cards: [],
+                    accepted: false
+                }]
             }
-        })
-    
+            console.log("trade:", currentTrade)
+
+            activePlayers.forEach((thisPlayer)=>{
+                if(thisPlayer.id == currentTrade.players[0].id || thisPlayer.id == currentTrade.players[1].id){
+                    console.log("spieler beteiligt")
+                    io.to(thisPlayer.id).emit("startTrade", {"trade": currentTrade})
+                } else {
+                    io.to(thisPlayer.id).emit("startTrade", {"trade": {players:[{id: data.fromPlayer},{id: data.forPlayer}]}})
+                }
+            })
+        }
     })
 
     socket.on("joinRoom", ()=>{
@@ -210,6 +223,9 @@ io.on("connection", (socket)=>{
             console.log("beide akzeptiert")
             io.to("trade").emit("tradeFinished", {"currentTrade": currentTrade})
             io.to("trade").emit("tradeEnded", {"reason": "finished"})
+            currentTrade.players.forEach((thisPlayer)=>{
+                activePlayers.find((thisActivePlayer)=>{return thisActivePlayer.id == thisPlayer.id}).occupied = true
+            })
         }
     })
 
