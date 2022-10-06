@@ -158,6 +158,8 @@ socket.on("startTrade", (data)=>{
         socket.emit("joinRoom")
         //am trade beteiligt
         tradeHandCards = []
+        document.getElementById("tradingAccept").classList.remove("tradingAcceptActive")
+        document.getElementById("tradingAccept").innerHTML = "<h3>Accept</h3>"
         document.getElementById("tradingPartner").innerHTML = " - " + currentPlayers.find((thisPlayer1)=>{return thisPlayer1.id == currentTrade.players.find((thisPlayer2)=>{return thisPlayer2.id != myPlayerID}).id}).username  + " - "
         document.getElementById("foreignAcres").style.display = "none"
         document.getElementById("trading").style.display = "block"
@@ -723,4 +725,22 @@ function removeTradedCard(cardNumber){
 function closeTradingMenu(){
     socket.emit("changeMyStatus", {"player": myPlayerID, "newOccupiedStatus": false})
     document.getElementById("trading").style.display = "none"
+}
+
+function buyThirdAcre(){
+    if(coins <= 3){
+        document.getElementById("buyThirdAcre").style.display = "none"
+        document.getElementById("ownAcre3").style.display = "block"
+        ownacres[2].locked = false
+    }
+}
+
+function cursorOnAcreBuyButton(over){
+    if(over == true && coins >= 3){
+        document.getElementById("buyThirdAcre").style.boxShadow = "0px 0px 10px 7px rgba(215, 215, 0, 0.6)"
+    } else if(over == true && coins < 3){
+        document.getElementById("buyThirdAcre").style.boxShadow = "0px 0px 10px 7px rgba(200, 0, 0, 0.6)"
+    } else if(over == false){
+        document.getElementById("buyThirdAcre").style.boxShadow = "0px 0px 0px 0px rgba(0, 0, 0, 0)"
+    }
 }
