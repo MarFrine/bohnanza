@@ -3,6 +3,7 @@
 let myUserName = undefined
 let myPlayerID = undefined
 let turn = undefined
+let awaitMyTurn = false
 let openCardsLeft = undefined
 let currentPlayers = undefined
 let currentTrade = {players:[{id:undefined},{id:undefined}]}
@@ -82,12 +83,31 @@ socket.on("startGame", (data)=>{
 
 socket.on("move_1", (data)=>{
     turn = data.turn
-    if(data.turn == myPlayerID){
+    if(data.occupiedPlayers){
+        if(!data.occupiedPlayers.find((player)=>{return player == myPlayerID})){
+            if(data.turn == myPlayerID){
+                startMove()
+            }
+        } else if(data.turn == myPlayerID){
+            awaitMyTurn = true
+        }
+    } else {
+        if(data.turn == myPlayerID){
+            startMove()
+        }
+    }
+    
+})
+
+function startMove(){
+    if(handCards.length == 0){
+        revealCards()
+    } else {
         const handCardList = document.getElementsByClassName("handCard")
         selectCard(handCardList[handCardList.length-1].id, "handCard")
         selectedCard.nextCard = true
     }
-})
+}
 
 socket.on("move_2", (data)=>{
     revealedCards = [data.cards[0], data.cards[1]]
@@ -222,6 +242,7 @@ socket.on("modifyTradingCards", (data)=>{
 socket.on("tradeFinished", (data)=>{
     //succesful trade
     console.log("trade finished")
+    tradingCards = []
     currentTrade = {
         players: [{
             id: undefined,
@@ -241,10 +262,13 @@ socket.on("tradeFinished", (data)=>{
     tradedCardsToPlantTemp.forEach((obj)=>{
         tradedCardsToPlant.push(obj.card)
     })
-    document.getElementById("tradedCards").style.display = "block"
-    renderTradedCardsToPlant()
-    console.log(tradedCardsToPlant)
-
+    if(tradedCardsToPlant.length == 0){
+        closeTradingMenu()
+    } else {
+        document.getElementById("tradedCards").style.display = "block"
+        renderTradedCardsToPlant()
+        console.log(tradedCardsToPlant)
+    }
 })
 
 socket.on("declineTrade", ()=>{
@@ -306,6 +330,18 @@ socket.on("endMove", ()=>{
     document.getElementById("endMove").style.display = "none"
     document.getElementById("showTradeRequests").style.display = "none"
     document.getElementById("tradeRequest").style.display = "none"
+
+    let requestButtons = document.getElementsByClassName("acceptTradeRequest")
+    for(let i = 0; i < requestButtons.length; i++){
+        requestButtons[i].classList.remove("acceptTradeRequestActive")
+        requestButtons[i].classList.remove("tradeRequestPending")
+        requestButtons[i].innerHTML = "<h3>" + currentPlayers.find((thisPlayer)=>{return thisPlayer.id == requestButtons[i].id.slice(18)}).username + "</h3>"
+        requestButtons[i].setAttribute("onclick", "requestTrade(this)")
+    }
+    document.getElementById("tradeRequest").innerHTML = "<h2>request trade</h2>"
+    document.getElementById("tradeRequest").classList.remove("tradeRequestPending")
+    document.getElementById("tradeRequest").classList.remove("acceptTradeRequestActive")
+    document.getElementById("tradeRequest").setAttribute("onclick", "requestTrade(this)")
 })
 
 socket.on("disconnect", (reason)=>{
@@ -342,6 +378,7 @@ function changeHandCards(method, card, position){
 }
 
 function changeTradingHandCards(cardNumber, activeState){
+    console.log("changeTradingHandCards: cardNumber: " + cardNumber + " activeState: " + activeState)
     tradeHandCards[cardNumber-1].active = activeState
     selectedCard = {
         card: undefined,
@@ -399,6 +436,7 @@ function changeOwnAcres(acre, harvest){
         if(ownacres[acre-1].type){
             socket.emit("addDeck", {"cardType": ownacres[acre-1].type, "count": ownacres[acre-1].count-ownacres[acre-1].momentaryGain})
             coins += ownacres[acre-1].momentaryGain
+            console.log("coins: " + coins)
             ownacres[acre-1].momentaryGain = 0
             ownacres[acre-1].type = undefined
             ownacres[acre-1].count = 0
@@ -488,14 +526,6 @@ function cursorOnAcre(acre, over){
         console.log("Acker " + acre + ": " + ownacres[acre-1].count + "x " + ownacres[acre-1].type + " -- Jetzt abbauen bringt " + ownacres[acre-1].momentaryGain + " Coins")//------------------------------------------------------
     }
 }
-
-/*function clickAcre(acre){
-    if(selectedCard.card != undefined){
-        changeOwnAcres(acre, "plant")
-    } else if(selectedCard.card == undefined){
-        changeOwnAcres(acre, "harvest")
-    }
-}*/
 
 function revealCards(){
     document.getElementById("revealCards").style.display = "none"
@@ -718,6 +748,7 @@ function removeTradedCard(cardNumber){
     tradedCardsToPlant.splice(cardNumber-1, 1)
     renderTradedCardsToPlant()
     if(tradedCardsToPlant.length < 1){
+        tradedCardsToPlant = []
         closeTradingMenu()
     }
 }
@@ -725,13 +756,20 @@ function removeTradedCard(cardNumber){
 function closeTradingMenu(){
     socket.emit("changeMyStatus", {"player": myPlayerID, "newOccupiedStatus": false})
     document.getElementById("trading").style.display = "none"
+    if(openCardsLeft == 0 && turn == myPlayerID){
+        document.getElementById("endMove").style.display = "block"
+    }
+    if(awaitMyTurn == true){
+        startMove()
+    }
 }
 
 function buyThirdAcre(){
-    if(coins <= 3){
+    if(coins >= 3){
         document.getElementById("buyThirdAcre").style.display = "none"
         document.getElementById("ownAcre3").style.display = "block"
         ownacres[2].locked = false
+        document.getElementById("ownAcreCount").innerHTML = " - 3 - "
     }
 }
 

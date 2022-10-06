@@ -257,7 +257,14 @@ io.on("connection", (socket)=>{
         let newTurn = activePlayers.indexOf(activePlayers.find((player)=>{return player.id == gameState.turn}))+1
         if(newTurn >= activePlayers.length){newTurn = 0}
         gameState.turn = activePlayers[newTurn].id
-        io.emit("move_1", {"turn": gameState.turn})
+        let occupiedPlayers = activePlayers.filter((thisActivePlayer)=>{
+            return thisActivePlayer.occupied == true
+        })
+        for(let i = 0; i < occupiedPlayers.length; i++){
+            occupiedPlayers[i] = occupiedPlayers[i].id
+        }
+        console.log("occupied Players:", occupiedPlayers)
+        io.emit("move_1", {"turn": gameState.turn, "occupiedPlayers": occupiedPlayers})
     })
 
     socket.on("disconnect", (reason)=>{
