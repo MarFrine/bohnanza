@@ -125,6 +125,25 @@ body{
     line-height: 0;
     border-radius: 90px;
 }
+#coinSlot{
+    position: absolute;
+    width: 45%;
+    right: 3%;
+    top: 500px;
+    background-color: rgba(200,200,200,0.8);
+    cursor: pointer;
+}
+#coinNumber{
+    position: absolute;
+    width: 130%;
+    left: -15%;
+    height: 40px;
+    top: 100px;
+    z-index: 100;
+    background-color: rgba(42, 148, 148, 0.8);
+    text-align: center;
+    line-height: 0;
+}
 .acreCenter{
     position: relative;
     width: 110px;

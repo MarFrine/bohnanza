@@ -56,6 +56,23 @@ class Player {
         this.handCards = []
         this.activeTrade = false
         this.occupied = false // wenn der Spieler nach dem Zug noch Karten aunabuen muss
+        this.acres = [
+            {
+                type: undefined,
+                count: 0,
+                locked: false
+            },
+            {
+                type: undefined,
+                count: 0,
+                locked: false
+            },
+            {
+                type: undefined,
+                count: 0,
+                locked: true
+            }
+        ]
         players.push(this)
         activePlayers.push(this)
         playerCount++
@@ -128,6 +145,7 @@ io.on("connection", (socket)=>{
         //console.log(gameState.turn)
     
         gameState.active = true
+        io.emit("playerList", activePlayers)
         activePlayers.forEach((player)=>{
             io.to(player.id).emit("startGame", {"cards": cards, "handCards": player.handCards})
         })
@@ -222,16 +240,28 @@ io.on("connection", (socket)=>{
         if(currentTrade.players[0].accepted == true && currentTrade.players[1].accepted == true){
             console.log("beide akzeptiert")
             io.to("trade").emit("tradeFinished", {"currentTrade": currentTrade})
-            io.to("trade").emit("tradeEnded", {"reason": "finished"})
+            io.emit("tradeCompleted")
             currentTrade.players.forEach((thisPlayer)=>{
                 activePlayers.find((thisActivePlayer)=>{return thisActivePlayer.id == thisPlayer.id}).occupied = true
             })
+            currentTrade = {
+                players: [{
+                    id: undefined,
+                    cards: [],
+                    firstRequest: undefined,
+                    accepted: false
+                    },{
+                    id: undefined,
+                    cards: [],
+                    firstRequest: undefined,
+                    accepted: false
+                }]
+            }
         }
     })
 
     socket.on("declineTrade", ()=>{
         io.to("trade").emit("declineTrade")
-        io.to("trade").emit("tradeEnded", {"reason": "decline"})
         io.emit("tradeCompleted")
         currentTrade = {
             players: [{
@@ -247,6 +277,30 @@ io.on("connection", (socket)=>{
             }]
         }
     })
+
+    socket.on("changeAcre", (data)=>{
+        thisPlayer = activePlayers.find((thisActivePlayer)=>{return thisActivePlayer.id == socket.id})
+        thisPlayer.acres = [
+            {
+                type: data.ownacres[0].type,
+                count: data.ownacres[0].count,
+                locked: data.ownacres[0].locked
+            },
+            {
+                type: data.ownacres[1].type,
+                count: data.ownacres[1].count,
+                locked: data.ownacres[1].locked
+            },
+            {
+                type: data.ownacres[2].type,
+                count: data.ownacres[2].count,
+                locked: data.ownacres[2].locked
+            }
+        ]
+        console.log("acre changed:", thisPlayer)
+        socket.broadcast.emit("changeAcre", {"player": thisPlayer.id, "acres": thisPlayer.acres})
+    })
+    
 
     socket.on("endMove", ()=>{
         socket.emit("endMoveCards", {"cards": [deck.shift(), deck.shift(), deck.shift()]})

@@ -40,6 +40,8 @@ let ownacres = [
         locked: true
     }
 ]
+let foreignAcres = []
+let currentlyShownAcre = undefined
 const socket = io()
 
 socket.on("connect", () => {
@@ -76,9 +78,25 @@ socket.on("startGame", (data)=>{
     console.log(filteredPlayers)
     filteredPlayers.forEach((thisPlayer)=>{
         tradeButtonString = tradeButtonString + "<button id='acceptTradeRequest" + thisPlayer.id + "' class='acceptTradeRequest' onclick='requestTrade(this)'><h3>" + thisPlayer.username + "</h3></button>"
+        foreignAcres.push({"player":thisPlayer.id, "acres":[{type:undefined,count:0,locked:false},{type:undefined,count:0,locked:false},{type:undefined,count:0,locked:true}]})
     })
+    currentlyShownAcre = filteredPlayers[0].id
+    document.getElementById("foreignAcreName").innerHTML = " - " + currentPlayers.find((thisPlayer)=>{return thisPlayer.id == currentlyShownAcre}).username + " - "
     console.log(tradeButtonString)
     document.getElementById("showTradeRequests").innerHTML = tradeButtonString
+})
+
+socket.on("changeAcre", (data)=>{
+    //{"player": thisPlayer.id, "acres": thisPlayer.acres}
+    let editedAcre = foreignAcres.find((thisAcre)=>{return thisAcre.player == data.player})
+    editedAcre.acres = data.acres
+    if(editedAcre.player == currentlyShownAcre){
+        renderForeignAcres(1)
+        renderForeignAcres(2)
+        if(editedAcre.acres[2].locked == false){
+            renderForeignAcres(3)
+        }
+    }
 })
 
 socket.on("move_1", (data)=>{
@@ -105,7 +123,11 @@ function startMove(){
     } else {
         const handCardList = document.getElementsByClassName("handCard")
         selectCard(handCardList[handCardList.length-1].id, "handCard")
-        selectedCard.nextCard = true
+        if(handCards.length == 1){
+            selectedCard.nextCard = false
+        } else {
+            selectedCard.nextCard = true
+        }
     }
 }
 
@@ -246,10 +268,12 @@ socket.on("tradeFinished", (data)=>{
     currentTrade = {
         players: [{
             id: undefined,
+            cards: [],
             firstRequest: undefined,
             accepted: false
             },{
             id: undefined,
+            cards: [],
             firstRequest: undefined,
             accepted: false
         }]
@@ -269,6 +293,7 @@ socket.on("tradeFinished", (data)=>{
         renderTradedCardsToPlant()
         console.log(tradedCardsToPlant)
     }
+    tradeEnded()
 })
 
 socket.on("declineTrade", ()=>{
@@ -292,25 +317,37 @@ socket.on("declineTrade", ()=>{
         timeValue++
     }
     let animationInterval = setInterval(tradeDeclineAnimation, 10)
-    
+    tradeEnded()
+    closeTradingMenu()
 })
 
-socket.on("tradeEnded", (data)=>{
+function tradeEnded(){
     socket.emit("leaveRoom")
     let handCardList = document.getElementsByClassName("handCard")
     for(let i = 0; i < handCardList.length; i++){
         handCardList[i].setAttribute("onclick", "")
         handCardList[i].classList.remove("pointer")
-    }
-})
+    }   
+}
 
-socket.on("tradeCompleted", ()=>{
-    if(openCardsLeft == 0 && turn == myPlayerID){
-        document.getElementById("endMove").style.display = "block"
-    }
+function closeTradingMenu(){
+    socket.emit("changeMyStatus", {"player": myPlayerID, "newOccupiedStatus": false})
     document.getElementById("foreignAcres").style.display = "block"
     document.getElementById("tradingButtons").style.display = "block"
     document.getElementById("trading").style.display = "none"
+    if(openCardsLeft == 0 && turn == myPlayerID){
+        document.getElementById("endMove").style.display = "block"
+    }
+    tradeHandCards = []
+    tradingCards = []
+    tradedCardsToPlant = []
+    if(awaitMyTurn == true){
+        awaitMyTurn = false
+        startMove()
+    }
+}
+
+socket.on("tradeCompleted", ()=>{
     document.getElementById("ownTradingcardSlot").innerHTML = " "
     document.getElementById("foreignTradingcardSlot").innerHTML = " "
     currentTrade = {
@@ -436,6 +473,9 @@ function changeOwnAcres(acre, harvest){
         if(ownacres[acre-1].type){
             socket.emit("addDeck", {"cardType": ownacres[acre-1].type, "count": ownacres[acre-1].count-ownacres[acre-1].momentaryGain})
             coins += ownacres[acre-1].momentaryGain
+            if(coins > 0){
+                document.getElementById("coinSlot").style.display = "block"
+            }
             console.log("coins: " + coins)
             ownacres[acre-1].momentaryGain = 0
             ownacres[acre-1].type = undefined
@@ -486,12 +526,12 @@ function changeOwnAcres(acre, harvest){
                 selectCard(selectedCard.id, 1)
                 openCardsLeft -= 1
                 socket.emit("centerCardRemove", {"card": "Left"})
-                if(openCardsLeft == 0){document.getElementById("endMove").style.display = "block"}
+                if(openCardsLeft == 0 && tradedCardsToPlant.length == 0){document.getElementById("endMove").style.display = "block"}
             } else if(selectedCard.source == 2){
                 selectCard(selectedCard.id, 2)
                 openCardsLeft -= 1
                 socket.emit("centerCardRemove", {"card": "Right"})
-                if(openCardsLeft == 0){document.getElementById("endMove").style.display = "block"}
+                if(openCardsLeft == 0 && tradedCardsToPlant.length == 0){document.getElementById("endMove").style.display = "block"}
             } else if(selectedCard.source == "tradedCard"){
                 let thisCardNumber = selectedCard.cardNumber
                 selectCard(selectedCard.id, "tradedCard")
@@ -504,6 +544,7 @@ function changeOwnAcres(acre, harvest){
 }
 
 function renderAcres(acre){
+    socket.emit("changeAcre", {"ownacres": ownacres})
     let renderedCards = "<img src='./pics/acre" + acre + ".png' id='acrePic" + acre + "' class='card' style='width:150px;left:-23px;'>"
     let cardPosition = 60
     for(let i = 0; i<ownacres[acre-1].count; i++){
@@ -753,23 +794,18 @@ function removeTradedCard(cardNumber){
     }
 }
 
-function closeTradingMenu(){
-    socket.emit("changeMyStatus", {"player": myPlayerID, "newOccupiedStatus": false})
-    document.getElementById("trading").style.display = "none"
-    if(openCardsLeft == 0 && turn == myPlayerID){
-        document.getElementById("endMove").style.display = "block"
-    }
-    if(awaitMyTurn == true){
-        startMove()
-    }
-}
 
 function buyThirdAcre(){
     if(coins >= 3){
         document.getElementById("buyThirdAcre").style.display = "none"
         document.getElementById("ownAcre3").style.display = "block"
         ownacres[2].locked = false
+        socket.emit("changeAcre", {"ownAcres": ownacres})
         document.getElementById("ownAcreCount").innerHTML = " - 3 - "
+        coins -= 3;
+    }
+    if(coins == 0){
+        document.getElementById("coinSlot").style.display = "none"
     }
 }
 
@@ -780,5 +816,54 @@ function cursorOnAcreBuyButton(over){
         document.getElementById("buyThirdAcre").style.boxShadow = "0px 0px 10px 7px rgba(200, 0, 0, 0.6)"
     } else if(over == false){
         document.getElementById("buyThirdAcre").style.boxShadow = "0px 0px 0px 0px rgba(0, 0, 0, 0)"
+    }
+}
+
+function cursorOnCoin(over){
+    document.getElementById("coinNumber").innerHTML = "<h2>" + coins + " Münzen</h2>"
+    if(over == true){
+        document.getElementById("coinNumber").style.display = "block"
+    } else {
+        document.getElementById("coinNumber").style.display = "none"
+    }
+}
+
+function renderForeignAcres(acre){
+    if(acre == 3){
+        document.getElementById("foreignAcre3").style.display = "block"
+    } else {
+        document.getElementById("foreignAcre3").style.display = "none"
+    }
+    let renderedCards = "<img src='./pics/acre" + acre + ".png' id='acrePic" + acre + "' class='card' style='width:150px;left:-23px;'>"
+    let cardPosition = 60
+    thisAcre = foreignAcres.find((thisForeignAcre)=>{return thisForeignAcre.player == currentlyShownAcre})
+    for(let i = 0; i<thisAcre.acres[acre-1].count; i++){
+        renderedCards = renderedCards + "<img src='./pics/" + cards.find((card)=>{return card.id == thisAcre.acres[acre-1].type}).image + "' class='card' style='top:" + cardPosition + "px'></img>"
+        cardPosition += 15
+    }
+    console.log(renderedCards)
+    document.getElementById("foreignAcreCenter" + acre + "").innerHTML = renderedCards
+}
+
+function selectNextAcre(){
+    let filteredPlayers = currentPlayers.filter((thisPlayer)=>{
+        return thisPlayer.id != myPlayerID
+    })
+    console.log(filteredPlayers)
+    let playerNumber = filteredPlayers.findIndex((thisFilteredPlayer)=>{return thisFilteredPlayer.id == currentlyShownAcre})
+    console.log(playerNumber)
+    if(filteredPlayers.length <= playerNumber+1){
+        console.log("1")
+        currentlyShownAcre = filteredPlayers[0].id
+    } else {
+        console.log("2")
+        currentlyShownAcre = filteredPlayers[playerNumber+1].id
+    }
+    console.log(currentlyShownAcre)
+    document.getElementById("foreignAcreName").innerHTML = " - " + currentPlayers.find((thisCurrentPlayer)=>{return thisCurrentPlayer.id == currentlyShownAcre}).username + " - "
+    renderForeignAcres(1)
+    renderForeignAcres(2)
+    if(foreignAcres.find((thisForeignAcre)=>{return thisForeignAcre.player == currentlyShownAcre}).acres[2].locked == false){
+        renderForeignAcres(3)
     }
 }

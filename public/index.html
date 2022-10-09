@@ -43,12 +43,16 @@
                 </div>
             </div>
             <div id="ownAcre3" class="thirdAcre" onmouseover="cursorOnAcre(3, true)" onmouseleave="cursorOnAcre(3, false)" onclick="changeOwnAcres(3)" style="display: none;">
-                <div id="ownAcreCenter3" class="acreCenter">
-                    <img src="./pics/acre3.png" class="card" id="acrePic3" style="width: 150px;left:-23px;">
-                </div>
+                <img src="./pics/acre3.png" class="card" id="acrePic3" style="width: 150px;left:-23px;">
             </div>
             <div id="buyThirdAcreDiv">
                 <button id="buyThirdAcre" onclick="buyThirdAcre()" onmouseover="cursorOnAcreBuyButton(true)" onmouseleave="cursorOnAcreBuyButton(false)"><h3>3. Acker kaufen</h3><br><h4>- 3 Münzen -</h4></button>
+            </div>
+            <div id="coinSlot" style="display: none;">
+                <div id="ownAcreCenter3" class="acreCenter" onmouseover="cursorOnCoin(true)" onmouseleave="cursorOnCoin(false)">
+                    <img src="./pics/coin.png" class="card" style="width: 150px;left:-23px;">
+                    <div id="coinNumber" style="display: none;"><h2>12 Münzen</h2></div>
+                </div>
             </div>
         </div>
         <div id="center">
@@ -88,9 +92,9 @@
         <div id="right">
             <div id="foreignAcres" class="sub_right" style="background-image: url('./pics/soil.png');">
                 <div class="head">
-                    <button id="nextAcre">&#10148;</button>
+                    <button id="nextAcre" onclick="selectNextAcre()">&#10148;</button>
                     <h2>Acres</h2>
-                    <h4> - SchokoMine - </h4>
+                    <h4 id="foreignAcreName"> - SchokoMine - </h4>
                 </div>
                 <div id="foreignAcre1" class="firstAcre">
                     <div id="foreignAcreCenter1" class="acreCenter">
@@ -106,7 +110,7 @@
                         <img src="./pics/ackerbohne.png" class="card" style="top:75px">
                     </div>
                 </div>
-                <div id="foreignAcre3" class="thirdAcre">
+                <div id="foreignAcre3" class="thirdAcre" style="display: none;">
                     <div id="foreignAcreCenter3" class="acreCenter">
                         <img src="./pics/acre3.png" class="card" style="width: 150px;left:-23px;">
                         <img src="./pics/ackerbohne.png" class="card" style="top:60px">
