@@ -71,6 +71,7 @@ socket.on("startGame", (data)=>{
     data.handCards.forEach((cardID)=>{changeHandCards("add", cardID)})
     console.log(cards, data.handCards)
     document.getElementById("fullscreenBlock").style.display = "none"
+    document.getElementById("title").innerHTML = "Bohnanza"
     let tradeButtonString = ""
     let filteredPlayers = currentPlayers.filter((thisPlayer)=>{
         return thisPlayer.id != myPlayerID
@@ -381,6 +382,17 @@ socket.on("endMove", ()=>{
     document.getElementById("tradeRequest").setAttribute("onclick", "requestTrade(this)")
 })
 
+socket.on("gameFinished", (data)=>{
+    document.getElementById("fullscreenBlock").style.display = "block"
+    console.log("game Finished")
+    console.log("players:", data.players)
+})
+
+socket.on("stopGame", (data)=>{
+    document.getElementById("fullscreenBlock").style.display = "block"
+    console.log("player " + data.player + "left")
+})
+
 socket.on("disconnect", (reason)=>{
     console.log("socket disconnected:", reason)
     document.getElementById("fullscreenBlock").style.display = "block"
@@ -473,6 +485,7 @@ function changeOwnAcres(acre, harvest){
         if(ownacres[acre-1].type){
             socket.emit("addDeck", {"cardType": ownacres[acre-1].type, "count": ownacres[acre-1].count-ownacres[acre-1].momentaryGain})
             coins += ownacres[acre-1].momentaryGain
+            socket.emit("changeCoins", {"coins": coins})
             if(coins > 0){
                 document.getElementById("coinSlot").style.display = "block"
             }
@@ -803,6 +816,7 @@ function buyThirdAcre(){
         socket.emit("changeAcre", {"ownAcres": ownacres})
         document.getElementById("ownAcreCount").innerHTML = " - 3 - "
         coins -= 3;
+        socket.emit("changeCoins", {"coins": coins})
     }
     if(coins == 0){
         document.getElementById("coinSlot").style.display = "none"

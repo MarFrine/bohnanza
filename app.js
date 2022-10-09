@@ -22,6 +22,7 @@ fs.readFile("./deck.json", "utf8", (error, data)=>{
 })
 
 let deck = []
+let shuffles = 0
 let oldDeck = []
 let playerCount = 0
 let players = []
@@ -56,6 +57,7 @@ class Player {
         this.handCards = []
         this.activeTrade = false
         this.occupied = false // wenn der Spieler nach dem Zug noch Karten aunabuen muss
+        this.coins = 0
         this.acres = [
             {
                 type: undefined,
@@ -85,25 +87,31 @@ class Player {
 }
 
 function shuffleCards(newDeck){
-    if(newDeck == cards) {
-        for(let i = 0; i < cards.length; i++) { //creates full, sorted deck
-            for(let j = 0; j < cards[i].count; j++){
-                deck.push(i+1)
+    if(shuffles < 2){
+        shuffles++
+        if(newDeck == cards) {
+            for(let i = 0; i < cards.length; i++) { //creates full, sorted deck
+                for(let j = 0; j < cards[i].count; j++){
+                    deck.push(i+1)
+                }
             }
+            deck.sort(() => Math.random() - 0.5); // shuffles deck
+            deck.sort(() => Math.random() - 0.5); // shuffles deck
+            deck.sort(() => Math.random() - 0.5); // shuffles deck
+            deck.sort(() => Math.random() - 0.5); // shuffles deck  -------- mehrfach damit es besser gemischt wird
+        } else {
+            newDeck.sort(() => Math.random() - 0.5);
+            newDeck.sort(() => Math.random() - 0.5);
+            newDeck.sort(() => Math.random() - 0.5);
+            newDeck.sort(() => Math.random() - 0.5);
+            deck = [...deck, ...newDeck]
         }
-        deck.sort(() => Math.random() - 0.5); // shuffles deck
-        deck.sort(() => Math.random() - 0.5); // shuffles deck
-        deck.sort(() => Math.random() - 0.5); // shuffles deck
-        deck.sort(() => Math.random() - 0.5); // shuffles deck  -------- mehrfach damit es besser gemischt wird
+        oldDeck = []
+        console.log(deck)
     } else {
-        newDeck.sort(() => Math.random() - 0.5);
-        newDeck.sort(() => Math.random() - 0.5);
-        newDeck.sort(() => Math.random() - 0.5);
-        newDeck.sort(() => Math.random() - 0.5);
-        deck = [...deck, ...newDeck]
+        gameFinished()
     }
-    oldDeck = []
-    console.log(deck)
+    
 }
 
 io.on("connection", (socket)=>{
@@ -300,6 +308,10 @@ io.on("connection", (socket)=>{
         console.log("acre changed:", thisPlayer)
         socket.broadcast.emit("changeAcre", {"player": thisPlayer.id, "acres": thisPlayer.acres})
     })
+
+    socket.on("changeCoins", (data)=>{
+        activePlayers.find((thisActivePlayer)=>{return thisActivePlayer.id == socket.id}).coins = data.coins
+    })
     
 
     socket.on("endMove", ()=>{
@@ -323,5 +335,11 @@ io.on("connection", (socket)=>{
 
     socket.on("disconnect", (reason)=>{
         activePlayers.find((player)=>{return player.id == socket.id}).disconnect(reason)
+        io.emit("stopGame", {"player": socket.id})
     })
 })
+
+function gameFinished(){
+
+    io.emit("gameFinished", {"players": activePlayers})
+}
