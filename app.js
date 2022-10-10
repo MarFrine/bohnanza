@@ -21,6 +21,7 @@ fs.readFile("./deck.json", "utf8", (error, data)=>{
     }
 })
 
+let currentReset = false
 let deck = []
 let shuffles = 0
 let oldDeck = []
@@ -86,6 +87,46 @@ class Player {
     }
 }
 
+app.get("/reset", (req, res)=>{
+    reset()
+    res.status(200)
+})
+
+function reset(){
+    setTimeout(()=>{currentReset = false}, 500)
+    currentReset = true
+    io.emit("reset")
+
+    deck = []
+    shuffles = 0
+    oldDeck = []
+    playerCount = 0
+    players = []
+    activePlayers = []
+    currentTrade = {
+        players: [{
+            id: undefined,
+            cards: [],
+            firstRequest: undefined, //ob dieser Spieler den Trade requested hat (wenn nicht hat er ihn angenommen)
+            accepted: false
+            },{
+            id: undefined,
+            cards: [],
+            firstRequest: undefined,
+            accepted: false
+        }]
+    }
+    gameState = {
+        active: false,
+        state: "pre-game", 
+        stateFinished: 0, //wie viele den state abgeschlossen haben
+        tradeOffers: [],
+        currentTrade: [],
+        turn: undefined, // wer dran ist(playerID)
+        openCards: []
+    }
+}
+
 function shuffleCards(newDeck){
     if(shuffles < 2){
         shuffles++
@@ -126,6 +167,11 @@ io.on("connection", (socket)=>{
         socket.disconnect("reason")
     }
 
+    socket.on("rejoin", ()=>{
+        socket.disconnect()
+        console.log("socket " + socket.id + " disconnected")
+    })
+
     socket.on("getUsername", (username, callback)=>{
         let usernameState
         if(activePlayers.find((player)=>{return player.username == username})){
@@ -141,6 +187,10 @@ io.on("connection", (socket)=>{
     })
 
     socket.on("startGame", ()=>{
+        if(activePlayers.length < 2){
+            console.log("zu wenig spieler")
+            return
+        }
         shuffleCards(cards)
         activePlayers.forEach((player)=>{
             player.handCards.push(deck.shift(), deck.shift(), deck.shift(), deck.shift(), deck.shift())
@@ -334,6 +384,9 @@ io.on("connection", (socket)=>{
     })
 
     socket.on("disconnect", (reason)=>{
+        if(currentReset == true){
+            return
+        }
         activePlayers.find((player)=>{return player.id == socket.id}).disconnect(reason)
         io.emit("stopGame", {"player": socket.id})
     })

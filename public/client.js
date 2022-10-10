@@ -44,6 +44,103 @@ let foreignAcres = []
 let currentlyShownAcre = undefined
 const socket = io()
 
+async function stageReset(){
+    await fetch("/reset", {method:"GET"})
+        .then((data)=>{console.log(data)})
+}
+
+function reset(){
+    socket.emit("rejoin")
+    turn = undefined
+    awaitMyTurn = false
+    openCardsLeft = undefined
+    currentPlayers = undefined
+    currentTrade = {players:[{id:undefined},{id:undefined}]}
+    revealedCards = []
+    cards = undefined
+    coins = 0
+    tradingCards = []
+    handCards = []
+    tradeHandCards = []
+    tradedCardsToPlant = []
+    selectedCard = {
+        source: undefined,
+        card: undefined,
+        nextCard: undefined,
+        id: undefined
+    }
+    ownacres = [
+        {
+            type: undefined,
+            count: 0,
+            momentaryGain: 0,
+            locked: false
+        },
+        {
+            type: undefined,
+            count: 0,
+            momentaryGain: 0,
+            locked: false
+        },
+        {
+            type: undefined,
+            count: 0,
+            momentaryGain: 0,
+            locked: true
+        }
+    ]
+    foreignAcres = []
+    currentlyShownAcre = undefined
+
+    document.getElementById("fullscreenBlock").style.display = "block"
+    document.getElementById("showTradeRequests").style.display = "none"
+    document.getElementById("tradeRequest").style.display = "none"
+    document.getElementById("foreignAcres").style.display = "block"
+    document.getElementById("trading").style.display = "none"
+    document.getElementById("endMove").style.display = "none"
+    document.getElementById("tradingButtons").style.display = "block"
+    document.getElementById("tradedCards").style.display = "none"
+    document.getElementById("tradeDeclined").style.display = "none"
+    document.getElementById("revealCards").style.display = "none"
+    document.getElementById("buyThirdAcre").style.display = "block"
+    document.getElementById("ownAcre3").style.display = "none"
+    document.getElementById("coinSlot").style.display = "none"
+    //document.getElementById("coinNumber").style.display = "none"
+    document.getElementById("foreignAcre3").style.display = "none"
+
+    document.getElementById("title").innerHTML = "???"
+    document.getElementById("centerCardLeft").innerHTML = "<img src='./pics/questionmark.png' class='card'>"
+    document.getElementById("centerCardRight").innerHTML = "<img src='./pics/questionmark.png' class='card'>"
+    document.getElementById("tradeRequest").innerHTML = "<h2>request trade</h2>"
+    document.getElementById("tradingAccept").innerHTML = "<h3>Accept</h3>"
+    document.getElementById("ownTradingcardSlot").innerHTML = " "
+    document.getElementById("foreignTradingcardSlot").innerHTML = " "
+    document.getElementById("handcardContainer").innerHTML = " "
+    document.getElementById("ownAcreCenter1").innerHTML = "<img src='./pics/acre1.png' class='card' id='acrePic1' style='width: 150px;left:-23px;'>"
+    document.getElementById("ownAcreCenter2").innerHTML = "<img src='./pics/acre2.png' class='card' id='acrePic2' style='width: 150px;left:-23px;'>"
+    document.getElementById("ownAcreCenter3").innerHTML = "<img src='./pics/acre3.png' class='card' id='acrePic3' style='width: 150px;left:-23px;'>"
+    document.getElementById("tradedCards").innerHTML = " "
+    document.getElementById("ownAcreCount").innerHTML = " - 2 - "
+    document.getElementById("foreignAcreCenter1").innerHTML = "<img src='./pics/acre1.png' class='card' id='acrePic1' style='width: 150px;left:-23px;'>"
+    document.getElementById("foreignAcreCenter2").innerHTML = "<img src='./pics/acre2.png' class='card' id='acrePic2' style='width: 150px;left:-23px;'>"
+    document.getElementById("foreignAcreCenter3").innerHTML = "<img src='./pics/acre3.png' class='card' id='acrePic3' style='width: 150px;left:-23px;'>"
+    document.getElementById("foreignAcreName").innerHTML = " -  - "
+    //document.getElementById("coinNumber").innerHTML = "<h2> 0 Münzen</h2>"
+
+    document.getElementById("tradeRequest").setAttribute("onclick", "requestTrade(this)")
+
+    document.getElementById("tradingAccept").classList.remove("tradingAcceptActive")
+    document.getElementById("tradingAccept").classList.remove("tradeRequestPending")
+    document.getElementById("tradeRequest").classList.remove("tradeRequestPending")
+    document.getElementById("tradeRequest").classList.remove("acceptTradeRequestActive")
+
+}
+
+socket.on("reset", ()=>{
+    reset()
+    setTimeout(()=>{socket.connect()}, 1000)
+})
+
 socket.on("connect", () => {
     console.log(socket.id)
     myPlayerID = socket.id
