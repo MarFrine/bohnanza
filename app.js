@@ -164,7 +164,7 @@ io.on("connection", (socket)=>{
         socket.disconnect()
     } else if(playerCount > 7){
         console.log("socket connect rejected - game is full")
-        socket.disconnect("reason")
+        socket.disconnect()
     }
 
     socket.on("rejoin", ()=>{
@@ -213,11 +213,11 @@ io.on("connection", (socket)=>{
     socket.on("addDeck", (data)=>{
         const newCardType = data.cardType
         const newCardCount = data.count
-        console.log(newCardType, newCardCount)
+        //console.log(newCardType, newCardCount)
         for(let i = 0; i < newCardCount; i++){
             oldDeck.push(newCardType)
         }
-        console.log(oldDeck)
+        //console.log(oldDeck)
     })
 
     socket.on("revealCards", ()=>{
@@ -234,7 +234,7 @@ io.on("connection", (socket)=>{
     })
 
     socket.on("sendTradeRequest", (data)=>{
-        console.log("Von: " + data.fromPlayer + ", für: " + data.forPlayer)
+        //console.log("Von: " + data.fromPlayer + ", für: " + data.forPlayer)
         io.to(data.forPlayer).emit("sendTradeRequest", {"fromPlayer": data.fromPlayer})
     })
 
@@ -243,13 +243,13 @@ io.on("connection", (socket)=>{
             return thisActivePlayer.id == data.player
         }).occupied = data.newOccupiedStatus
         socket.emit("tradeCompleted")
-        console.log("status changed from " + data.player)
+        //console.log("status changed from " + data.player)
     })
 
     socket.on("acceptTrade", (data)=>{
         
         if((activePlayers.find((thisActivePlayer)=>{return thisActivePlayer.id == data.fromPlayer}).occupied == true) || (activePlayers.find((thisActivePlayer)=>{return thisActivePlayer.id == data.forPlayer}).occupied == true)){
-            console.log("one player is occupied")
+            //console.log("one player is occupied")
         } else {
             currentTrade = {
                 players: [{
@@ -262,11 +262,11 @@ io.on("connection", (socket)=>{
                     accepted: false
                 }]
             }
-            console.log("trade:", currentTrade)
+            //console.log("trade:", currentTrade)
 
             activePlayers.forEach((thisPlayer)=>{
                 if(thisPlayer.id == currentTrade.players[0].id || thisPlayer.id == currentTrade.players[1].id){
-                    console.log("spieler beteiligt")
+                    //console.log("spieler beteiligt")
                     io.to(thisPlayer.id).emit("startTrade", {"trade": currentTrade})
                 } else {
                     io.to(thisPlayer.id).emit("startTrade", {"trade": {players:[{id: data.fromPlayer},{id: data.forPlayer}]}})
@@ -285,7 +285,7 @@ io.on("connection", (socket)=>{
 
     socket.on("modifyTradingCards", (data)=>{
         currentTrade.players[currentTrade.players.findIndex((thisPlayer)=>{return thisPlayer.id == data.player})].cards = data.cards
-        console.log(currentTrade)
+        //console.log(currentTrade)
         currentTrade.players[0].accepted = false
         currentTrade.players[1].accepted = false
         io.to("trade").emit("editCurrentTrade", {"currentTrade": currentTrade})
@@ -296,7 +296,7 @@ io.on("connection", (socket)=>{
         currentTrade = data.currentTrade
         io.to("trade").emit("editCurrentTrade", {"currentTrade": currentTrade})
         if(currentTrade.players[0].accepted == true && currentTrade.players[1].accepted == true){
-            console.log("beide akzeptiert")
+            //console.log("beide akzeptiert")
             io.to("trade").emit("tradeFinished", {"currentTrade": currentTrade})
             io.emit("tradeCompleted")
             currentTrade.players.forEach((thisPlayer)=>{
@@ -355,7 +355,7 @@ io.on("connection", (socket)=>{
                 locked: data.ownacres[2].locked
             }
         ]
-        console.log("acre changed:", thisPlayer)
+        //console.log("acre changed:", thisPlayer)
         socket.broadcast.emit("changeAcre", {"player": thisPlayer.id, "acres": thisPlayer.acres})
     })
 
@@ -379,7 +379,7 @@ io.on("connection", (socket)=>{
         for(let i = 0; i < occupiedPlayers.length; i++){
             occupiedPlayers[i] = occupiedPlayers[i].id
         }
-        console.log("occupied Players:", occupiedPlayers)
+        //console.log("occupied Players:", occupiedPlayers)
         io.emit("move_1", {"turn": gameState.turn, "occupiedPlayers": occupiedPlayers})
     })
 

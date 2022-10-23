@@ -335,3 +335,24 @@ body{
     top: 50%;
     background-color: rgba(0,0,100,0.3);
 }
+#turnQueueBox{
+    position: absolute;
+    display: flex;
+    align-items: center;
+    width: 20%;
+    right: 2.5%;
+    height: 50%;
+    top: 50%;
+    transform: translateY(-65%);
+    
+}
+#turnQueue{
+    position: relative;
+    left: 50%;
+    color: rgba(0, 0, 0, 1);
+    text-align: center;
+    transform: translateX(-50%);
+    overflow-x: scroll;
+    scrollbar-color: rgba(1,1,1,0.5) transparent;
+    scrollbar-width: thin;
+}

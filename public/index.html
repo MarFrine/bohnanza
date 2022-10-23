@@ -10,12 +10,13 @@
     <link type="text/css" rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div id="fullscreenBlock">
+    <div id="fullscreenBlock" style="display: block;">
+        <div id="lastExecution" style="color:gray">functions:</div>
     </div>
     <div id="game">
         <div id="left">
             <div class="head">
-                <h2>Own Acres</h2>
+                <h2>Bohnenfelder</h2>
                 <h4 id="ownAcreCount"> - 2 - </h4>
             </div>
             <div id="ownAcre1" class="firstAcre" onmouseover="cursorOnAcre(1, true)" onmouseleave="cursorOnAcre(1, false)" onclick="changeOwnAcres(1)">
@@ -29,13 +30,15 @@
                 </div>
             </div>
             <div id="ownAcre3" class="thirdAcre" onmouseover="cursorOnAcre(3, true)" onmouseleave="cursorOnAcre(3, false)" onclick="changeOwnAcres(3)" style="display: none;">
-                <img src="./pics/acre3.png" class="card" id="acrePic3" style="width: 150px;left:-23px;">
+                <div id="ownAcreCenter3" class="acreCenter">
+                    <img src="./pics/acre3.png" class="card" id="acrePic3" style="width: 150px;left:-23px;">
+                </div>
             </div>
             <div id="buyThirdAcreDiv">
                 <button id="buyThirdAcre" onclick="buyThirdAcre()" onmouseover="cursorOnAcreBuyButton(true)" onmouseleave="cursorOnAcreBuyButton(false)"><h3>3. Acker kaufen</h3><br><h4>- 3 Münzen -</h4></button>
             </div>
             <div id="coinSlot" style="display: none;">
-                <div id="ownAcreCenter3" class="acreCenter" onmouseover="cursorOnCoin(true)" onmouseleave="cursorOnCoin(false)">
+                <div class="acreCenter" onmouseover="cursorOnCoin(true)" onmouseleave="cursorOnCoin(false)">
                     <img src="./pics/coin.png" class="card" style="width: 150px;left:-23px;">
                     <div id="coinNumber" style="display: none;"><h2>0 Münzen</h2></div>
                 </div>
@@ -55,14 +58,21 @@
                         <img src="./pics/questionmark.png" class="card">
                     </div>
                 </div>
-                <button id="tradeRequest" class="centerButton" style="display:none;" onclick="requestTrade(this, turn)"><h2>request trade</h2></button>
-                <button id="endMove" class="centerButton" style="display:none;" onclick="endMove()"><h2>end current move</h2></button>
-                <button id="revealCards" class="centerButton" style="display:none;" onclick="revealCards()"><h2>reveal cards</h2></button>
+                <button id="tradeRequest" class="centerButton" style="display:none;" onclick="requestTrade(this, turn)"><h2>Handel anfragen</h2></button>
+                <button id="endMove" class="centerButton" style="display:none;" onclick="endMove()"><h2>Zug beenden</h2></button>
+                <button id="revealCards" class="centerButton" style="display:none;" onclick="revealCards()"><h2>Karten aufdecken</h2></button>
                 <div id="showTradeRequests" style="display: none;"></div>
+                <div id="turnQueueBox">
+                    <div id="turnQueue">
+                        MarFri<br>
+                        test<br><br>
+                    </div>
+                </div>
+                
             </div>
             <div id="handcards">
                 <div class="head" style="height: 45px;">
-                    <h3>Handcards</h3>
+                    <h3>Handkarten</h3>
                 </div>
                 <div id="handcardContainer">
                 </div>
@@ -72,8 +82,8 @@
             <div id="foreignAcres" class="sub_right" style="background-image: url('./pics/soil.png');">
                 <div class="head">
                     <button id="nextAcre" onclick="selectNextAcre()">&#10148;</button>
-                    <h2>Acres</h2>
-                    <h4 id="foreignAcreName"> - SchokoMine - </h4>
+                    <h2>Bohnenfelder</h2>
+                    <h4 id="foreignAcreName"> - - </h4>
                 </div>
                 <div id="foreignAcre1" class="firstAcre">
                     <div id="foreignAcreCenter1" class="acreCenter">
@@ -93,12 +103,12 @@
             </div>
             <div id="trading" class="sub_right" style="display: none;">
                 <div class="head">
-                    <h2>Trading</h2>
+                    <h2>Handel</h2>
                     <h4 id="tradingPartner"></h4>
                 </div>
                 <div id="tradingButtons">
-                    <button id="tradingDecline" class="tradingButton" style="left: 3%;" onclick="tradingButton(false)"><h3>Decline</h3></button>
-                    <button id="tradingAccept" class="tradingButton" style="right: 3%;" onclick="tradingButton(true)"><h3>Accept</h3></button>
+                    <button id="tradingDecline" class="tradingButton" style="left: 3%;" onclick="tradingButton(false)"><h3>Ablehnen</h3></button>
+                    <button id="tradingAccept" class="tradingButton" style="right: 3%;" onclick="tradingButton(true)"><h3>Akzeptieren</h3></button>
                     <div id="line"></div>
                 </div>
                 <div id="ownTradingcards">
@@ -111,7 +121,7 @@
                 </div>
                 <div id="tradedCards" style="display: none;"></div>
             </div>
-            <div id="tradeDeclined" style="display: none;"><h2>trade declined</h2></div>
+            <div id="tradeDeclined" style="display: none;"><h2>Handel abgelehnt</h2></div>
         </div>
     </div>
 </body>

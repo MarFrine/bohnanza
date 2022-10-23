@@ -102,17 +102,17 @@ function reset(){
     document.getElementById("tradedCards").style.display = "none"
     document.getElementById("tradeDeclined").style.display = "none"
     document.getElementById("revealCards").style.display = "none"
-    document.getElementById("buyThirdAcre").style.display = "block"
+    document.getElementById("buyThirdAcreDiv").style.display = "block"
     document.getElementById("ownAcre3").style.display = "none"
     document.getElementById("coinSlot").style.display = "none"
-    //document.getElementById("coinNumber").style.display = "none"
+    document.getElementById("coinNumber").style.display = "none"
     document.getElementById("foreignAcre3").style.display = "none"
 
     document.getElementById("title").innerHTML = "???"
     document.getElementById("centerCardLeft").innerHTML = "<img src='./pics/questionmark.png' class='card'>"
     document.getElementById("centerCardRight").innerHTML = "<img src='./pics/questionmark.png' class='card'>"
-    document.getElementById("tradeRequest").innerHTML = "<h2>request trade</h2>"
-    document.getElementById("tradingAccept").innerHTML = "<h3>Accept</h3>"
+    document.getElementById("tradeRequest").innerHTML = "<h2>Trade anfragen</h2>"
+    document.getElementById("tradingAccept").innerHTML = "<h3>Akzeptieren</h3>"
     document.getElementById("ownTradingcardSlot").innerHTML = " "
     document.getElementById("foreignTradingcardSlot").innerHTML = " "
     document.getElementById("handcardContainer").innerHTML = " "
@@ -125,7 +125,7 @@ function reset(){
     document.getElementById("foreignAcreCenter2").innerHTML = "<img src='./pics/acre2.png' class='card' id='acrePic2' style='width: 150px;left:-23px;'>"
     document.getElementById("foreignAcreCenter3").innerHTML = "<img src='./pics/acre3.png' class='card' id='acrePic3' style='width: 150px;left:-23px;'>"
     document.getElementById("foreignAcreName").innerHTML = " -  - "
-    //document.getElementById("coinNumber").innerHTML = "<h2> 0 Münzen</h2>"
+    document.getElementById("coinNumber").innerHTML = "<h2>0 Münzen</h2>"
 
     document.getElementById("tradeRequest").setAttribute("onclick", "requestTrade(this)")
 
@@ -164,6 +164,7 @@ socket.on("playerList", (data)=>{
 })
 
 socket.on("startGame", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " a"
     cards = data.cards
     data.handCards.forEach((cardID)=>{changeHandCards("add", cardID)})
     console.log(cards, data.handCards)
@@ -185,6 +186,7 @@ socket.on("startGame", (data)=>{
 })
 
 socket.on("changeAcre", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - b"
     //{"player": thisPlayer.id, "acres": thisPlayer.acres}
     let editedAcre = foreignAcres.find((thisAcre)=>{return thisAcre.player == data.player})
     editedAcre.acres = data.acres
@@ -198,7 +200,9 @@ socket.on("changeAcre", (data)=>{
 })
 
 socket.on("move_1", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - c"
     turn = data.turn
+    renderTurnQueue()
     if(data.occupiedPlayers){
         if(!data.occupiedPlayers.find((player)=>{return player == myPlayerID})){
             if(data.turn == myPlayerID){
@@ -213,9 +217,33 @@ socket.on("move_1", (data)=>{
         }
     }
     
+    if(turn != myPlayerID){
+        currentlyShownAcre = turn
+        document.getElementById("foreignAcreName").innerHTML = " - " + currentPlayers.find((thisCurrentPlayer)=>{return thisCurrentPlayer.id == currentlyShownAcre}).username + " - "
+        renderForeignAcres(1)
+        renderForeignAcres(2)
+        if(foreignAcres.find((thisForeignAcre)=>{return thisForeignAcre.player == currentlyShownAcre}).acres[2].locked == false){
+            renderForeignAcres(3)
+        }
+    }
 })
 
+function renderTurnQueue(){
+    let turnQueueString = "<font size='+2'>"
+    currentPlayers.forEach((thisCurrentPlayer)=>{
+        if(thisCurrentPlayer.id == turn){
+            turnQueueString += "<span style='color: gold; text-decoration-line: underline; font-size:xx-large'>" + thisCurrentPlayer.username + "</span><br>"
+        } else {
+            turnQueueString += thisCurrentPlayer.username + "<br>"
+        }
+        
+    })
+    turnQueueString += "<br></font>"
+    document.getElementById("turnQueue").innerHTML = turnQueueString
+}
+
 function startMove(){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - d"
     if(handCards.length == 0){
         revealCards()
     } else {
@@ -230,6 +258,7 @@ function startMove(){
 }
 
 socket.on("move_2", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - e"
     revealedCards = [data.cards[0], data.cards[1]]
     openCardsLeft = 2
     document.getElementById("centerCardLeft").innerHTML = "<img id='centerCardLeftImage' src='./pics/" + cards.find((card)=>{return card.id == revealedCards[0]}).image + "' class='card'>"
@@ -246,10 +275,12 @@ socket.on("move_2", (data)=>{
 })
 
 socket.on("centerCardRemove", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - f"
     document.getElementById("centerCard" + data.card).innerHTML = "<img src='./pics/questionmark.png' class='card'>"
 })
 
 socket.on("centerCardAdd", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - g"
     console.log(data)
     if(data.card == 1){
         document.getElementById("centerCardLeft").innerHTML = "<img id='centerCardLeftImage' src='./pics/" + cards.find((card)=>{return card.id == revealedCards[0]}).image + "' class='card'>"
@@ -267,12 +298,14 @@ socket.on("centerCardAdd", (data)=>{
 })
 
 socket.on("endMoveCards", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - h"
     data.cards.forEach((thisCard)=>{
         changeHandCards("add", thisCard)
     })
 })
 
 socket.on("sendTradeRequest", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - i"
     if(turn == myPlayerID){
         let requestButtons = document.getElementsByClassName("acceptTradeRequest")
         for(let i = 0; i < requestButtons.length; i++){
@@ -284,13 +317,14 @@ socket.on("sendTradeRequest", (data)=>{
             }
         }
     } else {
-        document.getElementById("tradeRequest").innerHTML = "<h2>accept trade</h2>"
+        document.getElementById("tradeRequest").innerHTML = "<h2>Handel akzeptieren</h2>"
         document.getElementById("tradeRequest").classList.add("acceptTradeRequestActive")
         document.getElementById("tradeRequest").setAttribute("onclick","acceptTrade('" + data.fromPlayer + "')")
     }
 })
 
 socket.on("startTrade", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - j"
     console.log("startTrade", data.trade)
     currentTrade = data.trade
     if(currentTrade.players[0].id == myPlayerID || currentTrade.players[1].id == myPlayerID){
@@ -299,7 +333,7 @@ socket.on("startTrade", (data)=>{
         //am trade beteiligt
         tradeHandCards = []
         document.getElementById("tradingAccept").classList.remove("tradingAcceptActive")
-        document.getElementById("tradingAccept").innerHTML = "<h3>Accept</h3>"
+        document.getElementById("tradingAccept").innerHTML = "<h3>Akzeptieren</h3>"
         document.getElementById("tradingPartner").innerHTML = " - " + currentPlayers.find((thisPlayer1)=>{return thisPlayer1.id == currentTrade.players.find((thisPlayer2)=>{return thisPlayer2.id != myPlayerID}).id}).username  + " - "
         document.getElementById("foreignAcres").style.display = "none"
         document.getElementById("trading").style.display = "block"
@@ -315,7 +349,7 @@ socket.on("startTrade", (data)=>{
                 }
             }
         } else {
-            document.getElementById("tradeRequest").innerHTML = "<h2>request trade</h2>"
+            document.getElementById("tradeRequest").innerHTML = "<h2>Handel anfragen</h2>"
             document.getElementById("tradeRequest").classList.remove("tradeRequestPending")
             document.getElementById("tradeRequest").classList.remove("acceptTradeRequestActive")
             document.getElementById("tradeRequest").setAttribute("onclick", "requestTrade(this)")
@@ -335,14 +369,16 @@ socket.on("startTrade", (data)=>{
 })
 
 socket.on("editCurrentTrade", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - k"
     currentTrade = data.currentTrade
     if(currentTrade.players[0].accepted == false && currentTrade.players[1].accepted == false){
         document.getElementById("tradingAccept").classList.remove("tradingAcceptActive")
-        document.getElementById("tradingAccept").innerHTML = "<h3>Accept</h3>"
+        document.getElementById("tradingAccept").innerHTML = "<h3>Akzeptieren</h3>"
     }
 })
 
 socket.on("modifyTradingCards", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - l"
     console.log(data)
     let renderedCards = ""
     let cardPosition = 0
@@ -360,6 +396,7 @@ socket.on("modifyTradingCards", (data)=>{
 })
 
 socket.on("tradeFinished", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - m"
     //succesful trade
     console.log("trade finished")
     tradingCards = []
@@ -395,6 +432,7 @@ socket.on("tradeFinished", (data)=>{
 })
 
 socket.on("declineTrade", ()=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - n"
     //declined trade
     if(tradingCards != []){
         removeTradingCard(true)
@@ -420,6 +458,7 @@ socket.on("declineTrade", ()=>{
 })
 
 function tradeEnded(){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - o"
     socket.emit("leaveRoom")
     let handCardList = document.getElementsByClassName("handCard")
     for(let i = 0; i < handCardList.length; i++){
@@ -429,6 +468,7 @@ function tradeEnded(){
 }
 
 function closeTradingMenu(){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - p"
     socket.emit("changeMyStatus", {"player": myPlayerID, "newOccupiedStatus": false})
     document.getElementById("foreignAcres").style.display = "block"
     document.getElementById("tradingButtons").style.display = "block"
@@ -446,6 +486,7 @@ function closeTradingMenu(){
 }
 
 socket.on("tradeCompleted", ()=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - q"
     document.getElementById("ownTradingcardSlot").innerHTML = " "
     document.getElementById("foreignTradingcardSlot").innerHTML = " "
     currentTrade = {
@@ -462,6 +503,7 @@ socket.on("tradeCompleted", ()=>{
 })
 
 socket.on("endMove", ()=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - r"
     document.getElementById("endMove").style.display = "none"
     document.getElementById("showTradeRequests").style.display = "none"
     document.getElementById("tradeRequest").style.display = "none"
@@ -473,19 +515,21 @@ socket.on("endMove", ()=>{
         requestButtons[i].innerHTML = "<h3>" + currentPlayers.find((thisPlayer)=>{return thisPlayer.id == requestButtons[i].id.slice(18)}).username + "</h3>"
         requestButtons[i].setAttribute("onclick", "requestTrade(this)")
     }
-    document.getElementById("tradeRequest").innerHTML = "<h2>request trade</h2>"
+    document.getElementById("tradeRequest").innerHTML = "<h2>Handel anfragen</h2>"
     document.getElementById("tradeRequest").classList.remove("tradeRequestPending")
     document.getElementById("tradeRequest").classList.remove("acceptTradeRequestActive")
     document.getElementById("tradeRequest").setAttribute("onclick", "requestTrade(this)")
 })
 
 socket.on("gameFinished", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - s"
     document.getElementById("fullscreenBlock").style.display = "block"
     console.log("game Finished")
     console.log("players:", data.players)
 })
 
 socket.on("stopGame", (data)=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - t"
     document.getElementById("fullscreenBlock").style.display = "block"
     console.log("player " + data.player + "left")
 })
@@ -503,6 +547,7 @@ function startGame(){
 }
 
 function changeHandCards(method, card, position){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 1"
     if(method == "add"){
         if(position){
             handCards.splice(position-1, 0, card)
@@ -524,6 +569,7 @@ function changeHandCards(method, card, position){
 }
 
 function changeTradingHandCards(cardNumber, activeState){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 2"
     console.log("changeTradingHandCards: cardNumber: " + cardNumber + " activeState: " + activeState)
     tradeHandCards[cardNumber-1].active = activeState
     selectedCard = {
@@ -543,6 +589,7 @@ function changeTradingHandCards(cardNumber, activeState){
 }
 
 function renderHandCards(handCardArray){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 3"
     let lastCardPosition
     if(handCards.length % 2 == 1){
         lastCardPosition = Math.floor(handCards.length / 2) * 30
@@ -577,14 +624,20 @@ function renderHandCards(handCardArray){
 }
 
 function changeOwnAcres(acre, harvest){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 4"
     console.log("changeAcres aufgerufen", acre)
     if(selectedCard.card == undefined || harvest == true){
         if(ownacres[acre-1].type){
-            socket.emit("addDeck", {"cardType": ownacres[acre-1].type, "count": ownacres[acre-1].count-ownacres[acre-1].momentaryGain})
-            coins += ownacres[acre-1].momentaryGain
-            socket.emit("changeCoins", {"coins": coins})
-            if(coins > 0){
-                document.getElementById("coinSlot").style.display = "block"
+            if(ownacres[acre-1].momentaryGain == "acre"){
+                socket.emit("addDeck", {"cardType": ownacres[acre-1].type, "count": 2})
+                buyThirdAcre(true)
+            } else {
+                socket.emit("addDeck", {"cardType": ownacres[acre-1].type, "count": ownacres[acre-1].count-ownacres[acre-1].momentaryGain})
+                coins += ownacres[acre-1].momentaryGain
+                socket.emit("changeCoins", {"coins": coins})
+                if(coins > 0){
+                    document.getElementById("coinSlot").style.display = "block"
+                }
             }
             console.log("coins: " + coins)
             ownacres[acre-1].momentaryGain = 0
@@ -604,7 +657,7 @@ function changeOwnAcres(acre, harvest){
             ownacres[acre-1].count += 1
             console.log(ownacres[acre-1].type)
             if(ownacres[acre-1].type == 1){
-                if(ownacres[acre-1].count >= cards.find((card)=>{return card.id == ownacres[acre-1].type}).gains[0]){ownacres[acre-1].momentaryGain = "acker"} //------------------------3.Acker
+                if(ownacres[acre-1].count >= cards.find((card)=>{return card.id == ownacres[acre-1].type}).gains[0]){ownacres[acre-1].momentaryGain = "acre"} //------------------------3.Acker
                 if(ownacres[acre-1].count >= cards.find((card)=>{return card.id == ownacres[acre-1].type}).gains[1]){ownacres[acre-1].momentaryGain = 3}
             } else if(ownacres[acre-1].type == 2){
                 if(ownacres[acre-1].count >= cards.find((card)=>{return card.id == ownacres[acre-1].type}).gains[0]){ownacres[acre-1].momentaryGain = 1}
@@ -654,6 +707,7 @@ function changeOwnAcres(acre, harvest){
 }
 
 function renderAcres(acre){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 5"
     socket.emit("changeAcre", {"ownacres": ownacres})
     let renderedCards = "<img src='./pics/acre" + acre + ".png' id='acrePic" + acre + "' class='card' style='width:150px;left:-23px;'>"
     let cardPosition = 60
@@ -666,6 +720,7 @@ function renderAcres(acre){
 }
 
 function cursorOnAcre(acre, over){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 6"
     if(over == false || (selectedCard.card == undefined && ownacres[acre-1].type == undefined)){
         document.getElementById("acrePic" + acre).style.boxShadow = "0px 0px 0px 0px rgba(255, 217, 0, 0.6)"
     } else if(over == true && (selectedCard.card != undefined && (cards.find((card)=>{return card.id == selectedCard.card}).id == ownacres[acre-1].type || ownacres[acre-1].type == undefined))){
@@ -679,6 +734,7 @@ function cursorOnAcre(acre, over){
 }
 
 function revealCards(){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 7"
     document.getElementById("revealCards").style.display = "none"
     if(selectedCard.card){
         console.log("revealCards + nextCard == true")
@@ -696,6 +752,7 @@ function revealCards(){
 }
 
 function selectCard(id, cardSource, cardNumber){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 8"
     console.log("selectCard mit id:" + id + " cardSource:" + cardSource + " cardNumber:" + cardNumber)
     if(selectedCard.card){
         console.log("gab schon karte")
@@ -758,6 +815,7 @@ function selectCard(id, cardSource, cardNumber){
 }
 
 function addTradingCard(){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 9"
     tradingCards.push({
         card: selectedCard.card,
         source: selectedCard.source,
@@ -792,6 +850,7 @@ function endMove(){
 }
 
 function requestTrade(button){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 10"
     let forPlayer
     if(turn == myPlayerID){
         button.classList.add("tradeRequestPending")
@@ -809,6 +868,7 @@ function requestTrade(button){
 }
 
 function acceptTrade(requestFrom){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 11"
     console.log("trade accepted: von " + requestFrom)
     if(currentTrade.players[0].id){
         //a trade is active
@@ -820,18 +880,19 @@ function acceptTrade(requestFrom){
 }
 
 function tradingButton(tradeAccepted){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 12"
     if(tradeAccepted == true){
         console.log("tradeAccepted == true")
         if(!document.getElementById("tradingAccept").classList.contains("tradingAcceptActive")){
             console.log("noch nicht accepted")
             currentTrade.players[currentTrade.players.findIndex((thisPlayer)=>{return thisPlayer.id == myPlayerID})].accepted = true
             document.getElementById("tradingAccept").classList.add("tradingAcceptActive")
-            document.getElementById("tradingAccept").innerHTML = "<h3>Accepted</h3>"
+            document.getElementById("tradingAccept").innerHTML = "<h3>Akzeptiert</h3>"
             socket.emit("editCurrentTrade", {"currentTrade": currentTrade})
         } else {
             currentTrade.players[currentTrade.players.findIndex((thisPlayer)=>{return thisPlayer.id == myPlayerID})].accepted = false
             document.getElementById("tradingAccept").classList.remove("tradingAcceptActive")
-            document.getElementById("tradingAccept").innerHTML = "<h3>Accept</h3>"
+            document.getElementById("tradingAccept").innerHTML = "<h3>Akzeptieren</h3>"
             socket.emit("editCurrentTrade", {"currentTrade": currentTrade})
         }
     } else {
@@ -841,11 +902,13 @@ function tradingButton(tradeAccepted){
 }
 
 function declineTrade(){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 13"
     //removeTradingCard(true)
     socket.emit("declineTrade")
 }
 
 function removeTradingCard(all, cardNumber){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 14"
     if(all == true){
         console.log("tradingCardLength: " + tradingCards.length)
         /*centerCardAdd1 = false
@@ -882,6 +945,7 @@ function removeTradingCard(all, cardNumber){
 }
 
 function renderTradedCardsToPlant(){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 15"
     let initPosition = (100 / tradedCardsToPlant.length) / 2 - 50
     let renderedCards = ""
     tradedCardsToPlant.forEach((card, index)=>{
@@ -896,6 +960,7 @@ function renderTradedCardsToPlant(){
 }
 
 function removeTradedCard(cardNumber){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 16"
     tradedCardsToPlant.splice(cardNumber-1, 1)
     renderTradedCardsToPlant()
     if(tradedCardsToPlant.length < 1){
@@ -905,22 +970,32 @@ function removeTradedCard(cardNumber){
 }
 
 
-function buyThirdAcre(){
-    if(coins >= 3){
-        document.getElementById("buyThirdAcre").style.display = "none"
+function buyThirdAcre(free){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 17"
+    if(free == true){
+        document.getElementById("buyThirdAcreDiv").style.display = "none"
         document.getElementById("ownAcre3").style.display = "block"
         ownacres[2].locked = false
-        socket.emit("changeAcre", {"ownAcres": ownacres})
+        socket.emit("changeAcre", {"ownacres": ownacres})
         document.getElementById("ownAcreCount").innerHTML = " - 3 - "
-        coins -= 3;
-        socket.emit("changeCoins", {"coins": coins})
-    }
-    if(coins == 0){
-        document.getElementById("coinSlot").style.display = "none"
+    } else {
+        if(coins >= 3){
+            document.getElementById("buyThirdAcreDiv").style.display = "none"
+            document.getElementById("ownAcre3").style.display = "block"
+            ownacres[2].locked = false
+            socket.emit("changeAcre", {"ownacres": ownacres})
+            document.getElementById("ownAcreCount").innerHTML = " - 3 - "
+            coins -= 3;
+            socket.emit("changeCoins", {"coins": coins})
+        }
+        if(coins == 0){
+            document.getElementById("coinSlot").style.display = "none"
+        }
     }
 }
 
 function cursorOnAcreBuyButton(over){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 18"
     if(over == true && coins >= 3){
         document.getElementById("buyThirdAcre").style.boxShadow = "0px 0px 10px 7px rgba(215, 215, 0, 0.6)"
     } else if(over == true && coins < 3){
@@ -931,6 +1006,7 @@ function cursorOnAcreBuyButton(over){
 }
 
 function cursorOnCoin(over){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 19"
     document.getElementById("coinNumber").innerHTML = "<h2>" + coins + " Münzen</h2>"
     if(over == true){
         document.getElementById("coinNumber").style.display = "block"
@@ -940,6 +1016,7 @@ function cursorOnCoin(over){
 }
 
 function renderForeignAcres(acre){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 20"
     if(acre == 3){
         document.getElementById("foreignAcre3").style.display = "block"
     } else {
@@ -957,6 +1034,7 @@ function renderForeignAcres(acre){
 }
 
 function selectNextAcre(){
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - 21"
     let filteredPlayers = currentPlayers.filter((thisPlayer)=>{
         return thisPlayer.id != myPlayerID
     })
