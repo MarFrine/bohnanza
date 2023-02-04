@@ -23,7 +23,6 @@ fs.readFile("./deck.json", "utf8", (error, data)=>{
 
 let currentReset = false
 let deck = []
-let shuffles = 0
 let oldDeck = []
 let playerCount = 0
 let players = []
@@ -48,6 +47,8 @@ let gameState = {
     tradeOffers: [],
     currentTrade: [],
     turn: undefined, // wer dran ist(playerID)
+    roundsLeft: undefined,
+    shuffles: 0,
     openCards: []
 }
 class Player {
@@ -88,8 +89,9 @@ class Player {
 }
 
 app.get("/reset", (req, res)=>{
+    console.log("app.get('/reset')")
     reset()
-    res.status(200)
+    res.status(200).send("ok")
 })
 
 function reset(){
@@ -98,7 +100,6 @@ function reset(){
     io.emit("reset")
 
     deck = []
-    shuffles = 0
     oldDeck = []
     playerCount = 0
     players = []
@@ -123,13 +124,15 @@ function reset(){
         tradeOffers: [],
         currentTrade: [],
         turn: undefined, // wer dran ist(playerID)
+        roundsLeft: undefined,
+        shuffles: 0,
         openCards: []
     }
 }
 
 function shuffleCards(newDeck){
-    if(shuffles < 2){
-        shuffles++
+    if(gameState.shuffles < 2){
+        gameState.shuffles++
         if(newDeck == cards) {
             for(let i = 0; i < cards.length; i++) { //creates full, sorted deck
                 for(let j = 0; j < cards[i].count; j++){
@@ -141,6 +144,7 @@ function shuffleCards(newDeck){
             deck.sort(() => Math.random() - 0.5); // shuffles deck
             deck.sort(() => Math.random() - 0.5); // shuffles deck  -------- mehrfach damit es besser gemischt wird
         } else {
+            if(newDeck.length < 1){io.emit("stopGame", {"player": "deck was empty"})}
             newDeck.sort(() => Math.random() - 0.5);
             newDeck.sort(() => Math.random() - 0.5);
             newDeck.sort(() => Math.random() - 0.5);
@@ -156,14 +160,16 @@ function shuffleCards(newDeck){
 }
 
 io.on("connection", (socket)=>{
-    if(gameState.active == false && playerCount <= 7){
+    if(gameState.active == false && playerCount < 7){
         const newPlayer = new Player(socket.id)
         console.log("socket connected:", socket.id)
     } else if(gameState.active == true){
         console.log("socket connect rejected - game is active")
+        socket.emit("connectionRefused")
         socket.disconnect()
-    } else if(playerCount > 7){
+    } else if(playerCount >= 7){
         console.log("socket connect rejected - game is full")
+        socket.emit("connectionRefused")
         socket.disconnect()
     }
 
@@ -175,7 +181,9 @@ io.on("connection", (socket)=>{
     socket.on("getUsername", (username, callback)=>{
         let usernameState
         if(activePlayers.find((player)=>{return player.username == username})){
-            usernameState = "reject"
+            usernameState = "taken"
+        } else if(username.length >= 20){
+            usernameState = "tooLong"
         } else {
             usernameState = "accepted"
             activePlayers.find((player)=>{return player.id == socket.id}).username = username
@@ -201,13 +209,16 @@ io.on("connection", (socket)=>{
         gameState.turn = activePlayers[randomPlayer].id
         //console.log(activePlayers)
         //console.log(gameState.turn)
-    
+        
+        gameState.roundsLeft = Math.floor(deck.length/5)
+        console.log(deck.length,playerCount,gameState.roundsLeft)
+
         gameState.active = true
         io.emit("playerList", activePlayers)
         activePlayers.forEach((player)=>{
             io.to(player.id).emit("startGame", {"cards": cards, "handCards": player.handCards})
         })
-        io.emit("move_1", {"turn": gameState.turn})
+        io.emit("move_1", {"turn": gameState.turn, "shuffles": 2-gameState.shuffles, "roundsLeft": gameState.roundsLeft})
     })
 
     socket.on("addDeck", (data)=>{
@@ -380,14 +391,18 @@ io.on("connection", (socket)=>{
             occupiedPlayers[i] = occupiedPlayers[i].id
         }
         //console.log("occupied Players:", occupiedPlayers)
-        io.emit("move_1", {"turn": gameState.turn, "occupiedPlayers": occupiedPlayers})
+        gameState.roundsLeft = Math.floor(deck.length/5)
+        console.log(deck.length,playerCount,gameState.roundsLeft)
+        io.emit("move_1", {"turn": gameState.turn, "occupiedPlayers": occupiedPlayers, "shuffles": 2-gameState.shuffles, "roundsLeft": gameState.roundsLeft})
     })
 
     socket.on("disconnect", (reason)=>{
         if(currentReset == true){
             return
         }
-        activePlayers.find((player)=>{return player.id == socket.id}).disconnect(reason)
+        if(activePlayers.find((player)=>{return player.id == socket.id})){
+            activePlayers.find((player)=>{return player.id == socket.id}).disconnect(reason)
+        }
         io.emit("stopGame", {"player": socket.id})
     })
 })

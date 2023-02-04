@@ -47,6 +47,7 @@ const socket = io()
 async function stageReset(){
     await fetch("/reset", {method:"GET"})
         .then((data)=>{console.log(data)})
+        .catch((error)=>{console.log("error: " + error)})
 }
 
 function reset(){
@@ -148,7 +149,11 @@ socket.on("connect", () => {
         myUserName = prompt("Enter Username", "username")
         socket.emit("getUsername", myUserName, (response)=>{
             if(response.status != "accepted"){
-                alert("Username already taken!")
+                if(response.status == "taken"){
+                    alert("Username already taken!")
+                } else if(response.status == "tooLong"){
+                    alert("Username too long!")
+                }
                 getUsername()
             } else {
                 document.getElementById("myName").innerText = " - " + myUserName + " - "
@@ -157,6 +162,10 @@ socket.on("connect", () => {
     }
     getUsername()
 });
+
+socket.on("connectionRefused", ()=>{
+    document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " connection Refused"
+})
 
 socket.on("playerList", (data)=>{
     currentPlayers = data
@@ -202,7 +211,7 @@ socket.on("changeAcre", (data)=>{
 socket.on("move_1", (data)=>{
     document.getElementById("lastExecution").innerHTML = document.getElementById("lastExecution").innerHTML + " - c"
     turn = data.turn
-    renderTurnQueue()
+    renderTurnQueue(data.shuffles, data.roundsLeft)
     if(data.occupiedPlayers){
         if(!data.occupiedPlayers.find((player)=>{return player == myPlayerID})){
             if(data.turn == myPlayerID){
@@ -228,7 +237,7 @@ socket.on("move_1", (data)=>{
     }
 })
 
-function renderTurnQueue(){
+function renderTurnQueue(shuffles, roundsLeft){
     let turnQueueString = "<font size='+2'>"
     currentPlayers.forEach((thisCurrentPlayer)=>{
         if(thisCurrentPlayer.id == turn){
@@ -238,8 +247,10 @@ function renderTurnQueue(){
         }
         
     })
-    turnQueueString += "<br></font>"
+    turnQueueString += "<br></font><br>"
+    turnQueueString += ("<br>Es wird noch " + (shuffles+1) + " mal gemischt<br><br>" + roundsLeft + " Züge bis zum nächsten mischen")
     document.getElementById("turnQueue").innerHTML = turnQueueString
+    
 }
 
 function startMove(){
